@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grocery Deals</title>
+<meta name="theme-color" content="#1d6b4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root{
+  --bg:#f6f7f5; --card:#fff; --ink:#1b1f1d; --muted:#667069; --line:#e3e7e2;
+  --accent:#1d6b4f; --accent-ink:#fff; --warn:#a15c00; --warn-bg:#fff4e0;
+  --giant:#c8102e; --lidl:#0050aa; --aldi:#00a0dd; --lotte:#e5731b;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121413; --card:#1c1f1d; --ink:#eef1ee; --muted:#9aa49d; --line:#2c312e;
+        --accent:#4cc38f; --accent-ink:#06130d; --warn:#ffcf85; --warn-bg:#3a2c12;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:0 16px env(safe-area-inset-bottom)}
+.wrap{max-width:760px;margin:0 auto}
+header{padding:20px 0 8px}
+h1{font-size:22px;margin:0}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:14px;margin:10px 0}
+.search{position:sticky;top:0;background:var(--bg);padding:10px 0 8px;z-index:5}
+input[type=search],input[type=text],select{
+  width:100%;font:inherit;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:999px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--c,#999)}
+.chip[aria-pressed=false]{opacity:.45}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.row{display:flex;gap:8px;margin-top:10px}
+.row>*{flex:1}
+.toggles{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 4px;font-size:14px;color:var(--muted)}
+.toggles label{display:flex;align-items:center;gap:6px}
+details.watch{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+details.watch summary{cursor:pointer;font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.tag{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:4px 10px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.tag button{all:unset;cursor:pointer;opacity:.8}
+.count{color:var(--muted);font-size:13px;margin:12px 2px 6px}
+.list{display:grid;gap:10px;padding-bottom:40px}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c,#999);
+  border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.card.hit{outline:2px solid var(--accent)}
+.name{font-weight:600}
+.meta{color:var(--muted);font-size:13px}
+.price{font-weight:700;font-size:20px;text-align:right;white-space:nowrap}
+.unit{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.was{font-size:12px;color:var(--muted);text-decoration:line-through;text-align:right}
+.store{font-weight:600;color:var(--c)}
+.pill{font-size:12px;border-radius:999px;padding:1px 8px;background:var(--line);color:var(--muted);margin-left:6px}
+.pill.soon{background:var(--warn-bg);color:var(--warn)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Grocery Deals</h1>
+    <div class="sub" id="updated">Loading…</div>
+  </header>
+  <div id="banner"></div>
+
+  <div class="search">
+    <input type="search" id="q" placeholder="Search deals (e.g. chicken, eggs, coffee)" autocomplete="off">
+    <div class="chips" id="storeChips"></div>
+    <div class="row">
+      <select id="sort" aria-label="Sort">
+        <option value="price">Sort: lowest price</option>
+        <option value="ending">Sort: ending soonest</option>
+        <option value="store">Sort: store</option>
+        <option value="name">Sort: name A–Z</option>
+      </select>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="onlyWatch"> Watch list only</label>
+      <label><input type="checkbox" id="showExpired"> Show expired</label>
+    </div>
+  </div>
+
+  <details class="watch" id="watchBox">
+    <summary>My watch list <span id="watchCount"></span></summary>
+    <div class="tags" id="tags"></div>
+    <input type="text" id="watchInput" placeholder="Add an item and press Enter" autocomplete="off">
+  </details>
+
+  <div class="count" id="count"></div>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const STORE_COLORS = {giant:'var(--giant)', lidl:'var(--lidl)', aldi:'var(--aldi)', lotte:'var(--lotte)'};
+let DATA = {items:[], stores:{}};
+let activeStores = new Set();
+let watch = [];
+
+try { watch = JSON.parse(localStorage.getItem('watch') || '[]'); } catch(e) {}
+function saveWatch(){ try { localStorage.setItem('watch', JSON.stringify(watch)); } catch(e) {} }
+
+function today(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function parseDate(s){ if(!s) return null; const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function fmtDay(d){ return d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function daysBetween(a,b){ return Math.round((b-a)/86400000); }
+function money(n){ return '$'+Number(n).toFixed(2); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function status(it){
+  const t=today(), from=parseDate(it.valid_from), to=parseDate(it.valid_to);
+  if(to && to<t) return {kind:'expired', label:'Expired '+fmtDay(to)};
+  if(from && from>t) return {kind:'future', label:'Starts '+fmtDay(from)};
+  if(to){
+    const n=daysBetween(t,to);
+    if(n===0) return {kind:'soon', label:'Ends today'};
+    if(n===1) return {kind:'soon', label:'Ends tomorrow'};
+    return {kind:'ok', label:'Through '+fmtDay(to)};
+  }
+  return {kind:'ok', label:''};
+}
+
+function matchesWatch(it){
+  const hay=(it.name+' '+(it.category||'')+' '+(it.notes||'')).toLowerCase();
+  return watch.some(w=>hay.includes(w.toLowerCase()));
+}
+
+function render(){
+  const q=$('#q').value.trim().toLowerCase();
+  const terms=q.split(/\s+/).filter(Boolean);
+  const onlyWatch=$('#onlyWatch').checked, showExpired=$('#showExpired').checked;
+  let items=DATA.items.filter(it=>{
+    if(!activeStores.has(it.store)) return false;
+    const st=status(it);
+    if(st.kind==='expired' && !showExpired) return false;
+    if(onlyWatch && !matchesWatch(it)) return false;
+    if(terms.length){
+      const hay=(it.name+' '+(it.category||'')+' '+(it.notes||'')+' '+it.store).toLowerCase();
+      if(!terms.every(t=>hay.includes(t))) return false;
+    }
+    return true;
+  });
+  const sort=$('#sort').value;
+  const price=it=>it.price==null?Infinity:it.price;
+  const end=it=>(parseDate(it.valid_to)||new Date(8.64e15)).getTime();
+  items.sort((a,b)=>{
+    if(sort==='price') return price(a)-price(b) || a.name.localeCompare(b.name);
+    if(sort==='ending') return end(a)-end(b) || price(a)-price(b);
+    if(sort==='store') return a.store.localeCompare(b.store) || a.name.localeCompare(b.name);
+    return a.name.localeCompare(b.name);
+  });
+  $('#count').textContent = items.length+' deal'+(items.length===1?'':'s');
+  const list=$('#list');
+  if(!items.length){
+    list.innerHTML='<div class="empty">No deals match. Try a different search or turn on more stores.</div>';
+    return;
+  }
+  list.innerHTML=items.map(it=>{
+    const st=status(it), meta=DATA.stores[it.store]||{name:it.store};
+    const hit=matchesWatch(it);
+    const p = it.price!=null ? money(it.price) : (it.price_text||'See ad');
+    const unit = it.unit ? `<span class="unit">${esc(it.unit)}</span>` : '';
+    const was = it.original_price!=null ? `<div class="was">${money(it.original_price)}</div>` : '';
+    const pill = st.label ? `<span class="pill ${st.kind==='soon'?'soon':''}">${esc(st.label)}</span>` : '';
+    return `<div class="card ${hit?'hit':''}" style="--c:${STORE_COLORS[it.store]||'#999'}">
+      <div><div class="name">${esc(it.name)}</div>
+        <div class="meta"><span class="store">${esc(meta.name)}</span>${pill}${it.notes?' · '+esc(it.notes):''}</div></div>
+      <div><div class="price">${esc(p)}${unit}</div>${was}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChips(){
+  const box=$('#storeChips');
+  box.innerHTML=Object.entries(DATA.stores).map(([id,m])=>
+    `<button class="chip" data-id="${id}" aria-pressed="${activeStores.has(id)}" style="--c:${STORE_COLORS[id]||'#999'}">
+       <span class="dot"></span>${esc(m.name)}</button>`).join('');
+  box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    activeStores.has(id)?activeStores.delete(id):activeStores.add(id);
+    renderChips(); render();
+  });
+}
+
+function renderWatch(){
+  $('#tags').innerHTML=watch.map((w,i)=>`<span class="tag">${esc(w)} <button data-i="${i}" aria-label="Remove ${esc(w)}">✕</button></span>`).join('');
+  $('#tags').querySelectorAll('button').forEach(b=>b.onclick=()=>{watch.splice(+b.dataset.i,1);saveWatch();renderWatch();render();});
+  $('#watchCount').textContent = watch.length?`(${watch.length})`:'';
+}
+$('#watchInput').addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  const v=e.target.value.trim();
+  if(v && !watch.some(w=>w.toLowerCase()===v.toLowerCase())){ watch.push(v); saveWatch(); }
+  e.target.value=''; renderWatch(); render();
+});
+['q','sort','onlyWatch','showExpired'].forEach(id=>$('#'+id).addEventListener('input',render));
+
+fetch('data/deals.json?'+Date.now()).then(r=>r.json()).then(d=>{
+  DATA=d;
+  activeStores=new Set(Object.keys(d.stores));
+  const u=d.updated?new Date(d.updated):null;
+  $('#updated').textContent = u?('Updated '+u.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+d.items.length+' deals'):(d.items.length+' deals');
+  if(d.sample) $('#banner').innerHTML='<div class="banner"><b>Sample data.</b> These are made-up examples so you can try the page. Add real flyers (see README) and this goes away.</div>';
+  renderChips(); renderWatch(); render();
+}).catch(()=>{
+  $('#updated').textContent='Could not load deals.';
+  $('#list').innerHTML='<div class="empty">data/deals.json not found. Run scripts/build_deals.py first.</div>';
+});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
