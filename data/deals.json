@@ -1,0 +1,116 @@
+{
+ "updated": "2026-10-21T16:50:46+00:00",
+ "sample": true,
+ "stores": {
+  "giant": {
+   "name": "Giant"
+  },
+  "lidl": {
+   "name": "Lidl"
+  },
+  "aldi": {
+   "name": "Aldi"
+  },
+  "lotte": {
+   "name": "Lotte Plaza Market"
+  }
+ },
+ "items": [
+  {
+   "store": "giant",
+   "name": "SAMPLE Boneless Chicken Breast",
+   "price": 1.99,
+   "price_text": "",
+   "unit": "lb",
+   "original_price": 3.49,
+   "valid_from": "2026-10-16",
+   "valid_to": "2026-10-29",
+   "category": "meat",
+   "notes": "with loyalty card"
+  },
+  {
+   "store": "lidl",
+   "name": "SAMPLE Large Eggs, 12 ct",
+   "price": 2.49,
+   "price_text": "",
+   "unit": "each",
+   "original_price": null,
+   "valid_from": "2026-10-22",
+   "valid_to": "2026-10-28",
+   "category": "dairy",
+   "notes": ""
+  },
+  {
+   "store": "aldi",
+   "name": "SAMPLE Ground Coffee, 12 oz",
+   "price": 4.29,
+   "price_text": "",
+   "unit": "each",
+   "original_price": 5.49,
+   "valid_from": "2026-10-21",
+   "valid_to": "2026-10-27",
+   "category": "beverages",
+   "notes": ""
+  },
+  {
+   "store": "lotte",
+   "name": "SAMPLE Napa Cabbage",
+   "price": 0.79,
+   "price_text": "",
+   "unit": "lb",
+   "original_price": null,
+   "valid_from": "2026-10-16",
+   "valid_to": "2026-10-22",
+   "category": "produce",
+   "notes": ""
+  },
+  {
+   "store": "giant",
+   "name": "SAMPLE Whole Milk, 1 gal",
+   "price": 3.29,
+   "price_text": "",
+   "unit": "each",
+   "original_price": 4.19,
+   "valid_from": "2026-10-16",
+   "valid_to": "2026-10-29",
+   "category": "dairy",
+   "notes": "limit 2"
+  },
+  {
+   "store": "aldi",
+   "name": "SAMPLE Bananas",
+   "price": 0.55,
+   "price_text": "",
+   "unit": "lb",
+   "original_price": null,
+   "valid_from": "2026-10-21",
+   "valid_to": "2026-10-27",
+   "category": "produce",
+   "notes": ""
+  },
+  {
+   "store": "lidl",
+   "name": "SAMPLE Chicken Thighs",
+   "price": 1.49,
+   "price_text": "",
+   "unit": "lb",
+   "original_price": null,
+   "valid_from": "2026-10-22",
+   "valid_to": "2026-10-28",
+   "category": "meat",
+   "notes": ""
+  },
+  {
+   "store": "lotte",
+   "name": "SAMPLE Frozen Dumplings, 24 oz",
+   "price": null,
+   "price_text": "2 for $9",
+   "unit": "each",
+   "original_price": null,
+   "valid_from": "2026-10-16",
+   "valid_to": "2026-10-22",
+   "category": "frozen",
+   "notes": ""
+  }
+ ]
+}
